@@ -1,0 +1,58 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+
+{% block body %}
+
+{% block script %}
+    <script src="{% static 'network/like.js' %}"></script>
+{% endblock %}
+
+<div class="col d-flex justify-content-center mt-5 mb-5" id="all_posts">
+    <div class="col-lg-9">
+        <h5>Posts</h5>
+        <div id="all-posts" class="card posts px-5 pt-4 pb-4">
+            {% for post in posts %}
+            <div class="posts-div">
+                {% if user.is_authenticated %}
+                    <div>
+                        <h6><a href="{% url 'network:user_profile' post.post_creator.id %}" style="text-decoration: none; color: #00C5CD;">{{ post.post_creator }}</a></h6>
+                    </div>
+                    {% else %}
+                    <div>
+                        <h6 style="text-decoration: none; color: #00C5CD;">{{ post.post_creator }}</h6>
+                    </div>
+                {% endif %}
+
+                <div class="input-div"></div>
+
+                <input type="hidden" id="post-id" name="post-id" value="{{ post.id }}">
+                <div class="post-body mb-2">{{ post.body }}</div>
+                <div style="font-size:14px" class="text-muted mb-2">{{ post.timestamp }}</div>
+
+                <!-- Like Post -->
+                {% if user.is_authenticated %}
+                {% csrf_token %}
+                <input id="request-user" type="hidden" value="{{ request.user }}">
+                <button type="submit" class="like-button" data-liked="{{ post.id }}" id="post-like{{ post.id }}" name="" value="{{ post.id }}" style="border:0; background-color: transparent;">
+                    {% if request.user in post.likes.all %}
+                    <i style="color: red;" class="fa-solid fa-heart"></i><span class="ps-2" id="likes-number">{{ post.total_likes }}</span>
+    
+                    {% else %}
+                    <i style="color: grey;" class="fa-solid fa-heart"></i><span class="ps-2" id="likes-number">{{ post.total_likes }}</span>
+    
+                    {% endif %}
+    
+                </button>
+                {% endif %}
+                
+                <hr class="mb-4">
+
+            </div>
+            {% empty %}
+                No Posts...
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

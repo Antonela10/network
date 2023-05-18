@@ -1,0 +1,205 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+
+{% block script %}
+    <script src="{% static 'network/like.js' %}"></script>
+    <script src="{% static 'network/edit.js' %}"></script>
+{% endblock %}
+
+<div class="col container-fluid d-flex justify-content-center" id="profile-body">
+    <div class="col-lg-9 pt-5" id="profile-box">
+        <div id="profile-body" class="row">
+            <div id="user-picture-info" class="d-flex">
+                    
+                <div id="user-picture"; class="col-lg-2">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" width="150" height="150" style="margin-right:20px;" class="">
+                    {% else %}
+                        <img src="{% static 'network/images/profile/Profile-Icon.png' %}" width="150" height="150" class="">
+                    {% endif %}
+                </div>
+
+                <div id="user-info"; class="col-lg-10">
+                    <div class="col">
+                        <h5 class="ms-3">{{ profile_user }}</h5>
+                        <div class="row">
+                            <div id="follow-unfollow-buttons"; class="d-flex col-lg-3 mt-1">
+                                <!-- Follow button -->
+                                <div class="col-lg-6 text-center">
+                                <form action="{% url 'network:add_followers' profile_user.id %}" method="POST" class="me-2">
+                                    {% csrf_token %}
+                                    {% if request.user.id == profile_user.id %}
+                                    <button disabled class="btn btn-sm" type="submit button" style="background-color: #009999; color: white;">Follow</button>
+                                    {% elif request.user.id in user_followers_id %}
+                                    <button disabled class="btn btn-sm" type="submit button" style="background-color: #009999; color: white;">Follow</button>
+                                    {% else %}
+                                    <button class="btn btn-sm" type="submit button" style="background-color: #009999; color: white;">Follow</button>
+                                    {% endif %}
+                                </form>
+                                </div>
+                                <!-- Unfollow button -->
+                                <div class="col-lg-6 text-center">
+                                <form action="{% url 'network:remove_followers' profile_user.id %}" method="POST">
+                                    {% csrf_token %}
+                                    {% if request.user.id == profile_user.id %}
+                                    <button disabled class="btn btn-sm" type="submit button" style="background-color: #009999; color: white;">Unfollow</button>
+                                    {% elif request.user.id not in user_followers_id %}
+                                    <button disabled class="btn btn-sm" type="submit button" style="background-color: #009999; color: white;">Unfollow</button>
+                                    {% else %}
+                                    <button class="btn btn-sm" type="submit button" style="background-color: #009999; color: white;">Unfollow</button>
+                                    {% endif %}
+                                </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="d-flex col-lg-3">
+                                <div class="col-lg-6 text-center" style=" font-size: 25px;">{{ followers.count }}</div>
+                                <div class="col-lg-6 text-center" style="font-size: 25px;">{{ following.count }}</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                        <div class="d-flex col-lg-3">
+                            <div class="col-lg-6 text-center" id="followers"><small>Followers</small></div>
+                            <div class="col-lg-6 text-center" id="following"><small>Following</small></div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div id="all_posts" class="mt-4 mb-4">
+            <h5>{{ profile_user }}'s posts</h5>
+            <div id="all-posts" class="card posts px-5 pt-4 pb-4">
+                {% for post in posts %}
+                <div class="posts-div">
+                    {% if user.is_authenticated %}
+                    <div>
+                        <h6><a href="{% url 'network:user_profile' post.post_creator.id %}" style="text-decoration: none; color: #00C5CD;">{{ post.post_creator }}</a></h6>
+                    </div>
+                    {% else %}
+                    <div>
+                        <h6 style="text-decoration: none; color: #00C5CD;">{{ post.post_creator }}</h6>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="input-div"></div>
+
+                    <input type="hidden" id="post-id" name="post-id" value="{{ post.id }}">
+                    <div class="post-body mb-2">{{ post.body }}</div>
+                    <div style="font-size:14px" class="text-muted mb-2">{{ post.timestamp }}</div>
+
+                    <!-- Like Post -->
+                    {% if user.is_authenticated %}
+                    <input id="request-user" type="hidden" value="{{ request.user }}">
+                    <button type="submit" class="like-button" data-liked="{{ post.id }}" id="post-like{{ post.id }}" name="" value="{{ post.id }}" style="border:0; background-color: transparent;">
+                        {% if request.user in post.likes.all %}
+                        <i style="color: red;" class="fa-solid fa-heart"></i><span class="ps-2" id="likes-number">{{ post.total_likes }}</span>
+
+                        {% else %}
+                        <i style="color: grey;" class="fa-solid fa-heart"></i><span class="ps-2" id="likes-number">{{ post.total_likes }}</span>
+
+                        {% endif %}
+
+                    </button>
+                    {% endif %}
+                    <br>
+
+                    <!-- Edit Post -->
+                    {% if request.user == post.post_creator %}
+                    <button style="background-color: #00C5CD; color: white;" class="btn btn-sm mt-2" data-post = "{{ post.id }}">Edit</button>
+                    {% endif %}
+                    <hr class="mb-4">
+                </div>
+                {% empty %}
+                     No Posts...
+                {% endfor %}
+                    
+            </div>
+                
+        </div>
+        
+    </div>
+
+</div>
+
+<div class="pop-up-box-followers">
+    <div class="overlay-followers"></div>
+    <div class="pop-up-body">
+        <div class="pop-up-inner-body">
+            {% for follower in followers %}
+            <div class="d-flex justify-content-between mb-2">
+                <div id="user-picture"; class="">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" width="50" height="50" style="margin-right:20px;" class="">
+                    {% else %}
+                        <img src="{% static 'network/images/profile/Profile-Icon.png' %}" width="35" height="35" class="">
+                    {% endif %}
+                </div>
+                <div style="height: 35px; line-height: 35px; text-align: center;" class="ms-3">
+                    <a href="{% url 'network:user_profile' follower.id %}" style="text-decoration: none; color: #00C5CD;">{{ follower }}</a>
+                </div>
+                <div style="height: 35px; display: grid;">   
+                        {% if request.user.id == follower.id %}
+                        <button class="btn btn-sm ms-3 text-center" style="background-color: white; color: white; margin: auto;">Following</button>
+                        {% elif follower in signed_user_following %}
+                        <button class="btn btn-sm ms-3 text-center" style="background-color: #009999; color: white; margin: auto; opacity: 0.5;">Following</button>
+                        {% else %}
+                        <form action="{% url 'network:add_followers' follower.id %}" method="POST">
+                            {% csrf_token %}
+                            <button class="btn btn-sm ms-3 text-center" type="submit button" style="background-color: #009999; color: white; margin: auto;">Follow</button>
+                        </form>
+                        {% endif %}
+                </div>
+            </div>
+            {% empty %}
+                No followers...
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="pop-up-box-following container-fluid justify-content-center">
+    <div class="overlay-following row d-flex"></div>
+    <div class="pop-up-body col-lg-3">
+        <div class="pop-up-inner-body">
+            {% for follower in following %}
+            <div class="row">
+                <div class="d-flex justify-content-between mb-2">
+                    <div id="user-picture"; class="col-lg-2">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" width="50" height="50" style="margin-right:20px;" class="">
+                        {% else %}
+                            <img src="{% static 'network/images/profile/Profile-Icon.png' %}" width="35" height="35" class="">
+                        {% endif %}
+                    </div>
+                    <div style="height: 35px; line-height: 35px;" class="col-lg-6 ms-4">
+                        <a href="{% url 'network:user_profile' follower.id %}" style="text-decoration: none; color: #00C5CD;">{{ follower }}</a>
+                    </div>
+                    <div style="height: 35px;" class="col-lg-4"> 
+                            {% if follower in signed_user_following %}
+                            <form action="{% url 'network:remove_followers' follower.id %}" method="POST">
+                                {% csrf_token %}
+                                <button class="btn btn-sm text-center" type="submit button" style="background-color: #009999; color: white; margin: auto;">Unfollow</button>
+                            </form>
+                            {% else %}
+                            <form action="{% url 'network:add_followers' follower.id %}" method="POST">
+                                {% csrf_token %}
+                                <button class="btn btn-sm text-center" type="submit button" style="background-color: #009999; color: white; margin: auto;">Follow</button>
+                            </form>
+                            {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+                {{ profile_user }} is not following anyone...
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
